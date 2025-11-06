@@ -1,6 +1,11 @@
 # portfolio_app.py
 import streamlit as st
 from streamlit_option_menu import option_menu
+from streamlit_lottie import st_lottie
+import plotly.graph_objects as go
+import requests
+from streamlit_extras.metric_cards import style_metric_cards
+import json
 
 # -----------------------------
 # Page Config
@@ -8,17 +13,36 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_title="Sarang Gulve - Portfolio", page_icon="🚀", layout="wide")
 
 # -----------------------------
+# Helper Functions
+# -----------------------------
+def load_lottie_url(url):
+    """Load a Lottie animation from a given URL"""
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception:
+        return None
+
+# -----------------------------
+# Load Lottie Animation (Verified Working URL)
+# -----------------------------
+lottie_ds = load_lottie_url("https://assets10.lottiefiles.com/packages/lf20_tno6cg2w.json")
+
+# -----------------------------
 # Custom CSS Styling
 # -----------------------------
 st.markdown("""
     <style>
-    .main {
-        background-color: #0e1117;
+    .stApp {
+        background-image: linear-gradient(135deg, #0a0f1f 0%, #1a1c23 100%);
+        background-attachment: fixed;
         color: #fafafa;
         font-family: 'Segoe UI', sans-serif;
     }
     h1, h2, h3 {
-        color: #00c0f0;
+        color: #00e6e6;
     }
     .stButton>button {
         background: linear-gradient(90deg, #00c0f0, #0066ff);
@@ -26,6 +50,7 @@ st.markdown("""
         border-radius: 10px;
         padding: 0.6em 1em;
         font-weight: bold;
+        border: none;
     }
     .card {
         background: #1a1c23;
@@ -33,6 +58,11 @@ st.markdown("""
         border-radius: 15px;
         margin-bottom: 20px;
         box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
+        transition: 0.3s;
+    }
+    .card:hover {
+        transform: scale(1.03);
+        box-shadow: 0px 0px 25px rgba(0,192,240,0.4);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -53,11 +83,28 @@ with st.sidebar:
 # Home
 # -----------------------------
 if selected == "Home":
-    st.title("🚀 Sarang Gulve")
-    st.subheader("Data Scientist | AI & Remote Sensing Specialist")
-    st.write("📍 Nashik, India | ✉️ [Email](mailto:saranggulve@gmail.com) | 🔗 [LinkedIn](https://www.linkedin.com/in/sarang-gulve-ab1477250/) | 💻 [GitHub](https://github.com/SARANGGULVE)")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.title("🚀 Sarang Gulve")
+        st.subheader("Data Scientist | AI & Remote Sensing Specialist")
+        st.write("📍 Nashik, India")
+        st.write("✉️ [Email](mailto:saranggulve@gmail.com)")
+        st.write("🔗 [LinkedIn](https://www.linkedin.com/in/sarang-gulve-ab1477250/) | 💻 [GitHub](https://github.com/SARANGGULVE)")
+        st.markdown("---")
+        st.info("Results-driven Data Scientist with expertise in AI, ML, Python, TensorFlow, SQL, and satellite imagery. Delivered end-to-end projects in agriculture, climate forecasting, and AI-powered applications to drive data-driven solutions.")
+    with col2:
+        if lottie_ds:
+            st_lottie(lottie_ds, height=280, key="home")
+        else:
+            st.warning("⚠️ Animation failed to load — please check your internet connection.")
+
     st.markdown("---")
-    st.info("Results-driven Data Scientist with expertise in AI, ML, Python, TensorFlow, SQL, and satellite imagery. Delivered end-to-end projects in agriculture, climate forecasting, and AI-powered applications to drive data-driven solutions.")
+    st.subheader("📊 Quick Stats")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Years of Experience", "1")
+    col2.metric("Projects Completed", "10+")
+    col3.metric("Research Papers", "0")
+    style_metric_cards(background_color="#1a1c23", border_color="#00c0f0", border_left_color="#00e6e6")
 
 # -----------------------------
 # Experience
@@ -96,6 +143,7 @@ elif selected == "Experience":
 # -----------------------------
 elif selected == "Projects":
     st.header("📂 Projects")
+
     projects = {
         "🌱 Agricultural Crop Land Monitoring": {
             "link": "https://github.com/SARANGGULVE/Agricultural-Crop-land-monitoring-",
@@ -126,21 +174,31 @@ elif selected == "Projects":
 # Skills
 # -----------------------------
 elif selected == "Skills":
-    st.header("🛠️ Technical Skills")
+    st.header("🧠 Skill Radar Chart")
+
     skills = {
         "Python": 90,
         "Machine Learning": 85,
         "Deep Learning": 80,
-        "Remote Sensing & GIS": 88,
-        "FastAPI & Streamlit": 75,
-        "SQL & Databases": 70,
-        "TensorFlow & PyTorch": 80,
-        "Power BI & Visualization": 65,
+        "Remote Sensing": 88,
+        "FastAPI": 75,
+        "SQL": 70,
+        "TensorFlow": 80,
+        "Power BI": 65,
     }
 
-    for skill, level in skills.items():
-        st.write(f"**{skill}**")
-        st.progress(level)
+    fig = go.Figure(data=go.Scatterpolar(
+        r=list(skills.values()),
+        theta=list(skills.keys()),
+        fill='toself',
+        marker_color='#00c0f0'
+    ))
+
+    fig.update_layout(
+        polar=dict(bgcolor="#1a1c23", radialaxis=dict(visible=True, range=[0,100])),
+        showlegend=False
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
 # Education
@@ -166,4 +224,24 @@ elif selected == "Contact":
     st.write("✉️ Email: [saranggulve@gmail.com](mailto:saranggulve@gmail.com)")
     st.write("🔗 LinkedIn: [Profile](https://www.linkedin.com/in/sarang-gulve-ab1477250/)")
     st.write("💻 GitHub: [SARANGGULVE](https://github.com/SARANGGULVE)")
+
+    st.markdown("---")
+    st.subheader("💬 Send a Message")
+    with st.form(key='contact_form'):
+        name = st.text_input("Your Name")
+        email = st.text_input("Your Email")
+        message = st.text_area("Your Message")
+        submit = st.form_submit_button("Send Message 🚀")
+
+        if submit:
+            st.success("Thanks for reaching out! I'll get back to you soon.")
+
+    st.markdown("---")
+    try:
+        with open("Sarang_Gulve_Resume.pdf", "rb") as file:
+            st.download_button("📄 Download My Resume", file, "Sarang_Gulve_Resume.pdf")
+    except FileNotFoundError:
+        st.warning("⚠️ Resume file not found. Please add 'Sarang_Gulve_Resume.pdf' to your project folder.")
+
     st.success("Let's collaborate on impactful AI & Data Science projects!")
+     
